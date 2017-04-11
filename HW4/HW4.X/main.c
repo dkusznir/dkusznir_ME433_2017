@@ -1,6 +1,7 @@
 #include<xc.h>           // processor SFR definitions
 #include<sys/attribs.h>  // __ISR macro
-
+#include <math.h>
+#include "spi.h"         // Include SPI helper functions
 
 // DEVCFG0
 #pragma config DEBUG = OFF // no debugging
@@ -63,24 +64,31 @@ int main()
     // Button input pin
     TRISBbits.TRISB4 = 1;
     
+    initSPI1();
+    
     __builtin_enable_interrupts();
-
+    
+    char count = 0;
+                
+    _CP0_SET_COUNT(0);
+    
     while(1) 
     {
-	    // use _CP0_SET_COUNT(0) and _CP0_GET_COUNT() to test the PIC timing
-		  // remember the core timer runs at half the CPU speed
-        _CP0_SET_COUNT(0);
-        while(_CP0_GET_COUNT() < 12000) //12000 in order to obtain 1KHz
+        if (_CP0_GET_COUNT() > 24000) 
         {
-            // Button pressed
-            while(!PORTBbits.RB4)
+            _CP0_SET_COUNT(0);
+                        
+            double triangle_wave = (count*1.275);                    // Triangle wave @5Hz
+            double sine_wave = (255*sin(2*M_PI*count/100));          // Sine wave @10Hz
+            
+            setVoltage(0, (unsigned char)triangle_wave);              
+            setVoltage(1, (unsigned char)sine_wave); 
+            
+            if (count > 199) 
             {
-                // Turn off LED
-                LATAbits.LATA4 = 0;
+                count = 0;          // Reset counter
             }
-        }
-        
-        LATAINV = 0b10000;
-              
+            count++;
+        }  
     }
 }
