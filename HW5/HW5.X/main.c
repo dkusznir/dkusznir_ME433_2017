@@ -1,6 +1,6 @@
 #include<xc.h>           // processor SFR definitions
 #include<sys/attribs.h>  // __ISR macro
-
+#include "i2c_master_noint.h"
 
 // DEVCFG0
 #pragma config DEBUG = OFF // no debugging
@@ -62,6 +62,10 @@ int main()
     
     // Button input pin
     TRISBbits.TRISB4 = 1;
+    
+    //Turn off analog for I2C2 pins, B2 & B3 (make them digital)
+    ANSELBbits.ANSB2 = 0;
+    ANSELBbits.ANSB3 = 0;
     
     __builtin_enable_interrupts();
 
