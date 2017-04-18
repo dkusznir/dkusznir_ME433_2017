@@ -1,4 +1,7 @@
-#include<xc.h>           // processor SFR definitions
+#include <xc.h>           // processor SFR definitions
+#include <sys/attribs.h>  // __ISR macro
+#include <stdio.h>
+#include "ILI9163C.h"
 
 // DEVCFG0
 #pragma config DEBUG = OFF // no debugging
@@ -60,13 +63,17 @@ int main()
     // Button input pin
     TRISBbits.TRISB4 = 1;
     
+    SPI1_init();
+    LCD_init();
+    
     __builtin_enable_interrupts();
     
+    char message[30];
+    int counterDisp = 0;
+    _CP0_SET_COUNT(0);
      
     while(1) 
     {
 
-            
-        
     }
 }
