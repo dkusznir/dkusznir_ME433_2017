@@ -222,9 +222,10 @@ void display_string(char * msg, int x, int y,unsigned short c1, unsigned short c
 {
     int index = 0;
     
-    while (msg[index])
+    while (msg[index] != 0)
     {
         display_char(msg[index], x + (index * 5), y, c1, c2);
+        index++;
     }
 }
 void display_bar(int x, int y, int height, int length, unsigned short c1, unsigned short c2)
@@ -235,14 +236,14 @@ void display_bar(int x, int y, int height, int length, unsigned short c1, unsign
     {
         for (j = y; j < y + height; j++)
         {
-            if (i > x || i < (x + length))
+            if (i < x || i > (x + length))
             {
-                LCD_drawPixel(i, j, c1);
+                LCD_drawPixel(i, j, c2);
             }
             
             else
             {
-                LCD_drawPixel(i, j, c2);
+                LCD_drawPixel(i, j, c1);
             }
         }
     }

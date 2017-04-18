@@ -65,15 +65,30 @@ int main()
     
     SPI1_init();
     LCD_init();
+    LCD_clearScreen(YELLOW);
     
     __builtin_enable_interrupts();
     
-    char message[30];
-    int counterDisp = 0;
+    char msg[100];
+    float frames_per_second;
+    int i;
+    
     _CP0_SET_COUNT(0);
      
     while(1) 
     {
-
+        for (i = 0; i < 101; i++)
+        {
+            _CP0_SET_COUNT(0);
+            
+            sprintf(msg, "Hello World %d!", i);
+            display_string(msg, 28, 32, BLUE, YELLOW);
+            display_bar(5, 64, 5, i, GREEN, YELLOW);
+            
+            frames_per_second = 24000000 / _CP0_GET_COUNT();
+            sprintf(msg, "FPS: %0.2f", frames_per_second);
+            display_string(msg, 40, 80, BLUE, YELLOW);
+            
+        }
     }
 }
