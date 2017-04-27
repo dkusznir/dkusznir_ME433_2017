@@ -144,6 +144,18 @@ void APP_Initialize ( void )
     // Button input pin
     TRISBbits.TRISB4 = 1;
     
+    LATAbits.LATA4 = 0;   
+        
+    ANSELBbits.ANSB2 = 0;
+    ANSELBbits.ANSB3 = 0;
+    
+    SPI1_init();
+    LCD_init();
+    
+    LCD_clearScreen(BLACK);
+
+    IMU_init();
+    
     __builtin_enable_interrupts();
 }
 
@@ -178,10 +190,7 @@ void APP_Tasks ( void )
 
         case APP_STATE_SERVICE_TASKS:
         {
-            while(1) 
-            {
-                // use _CP0_SET_COUNT(0) and _CP0_GET_COUNT() to test the PIC timing
-                // remember the core timer runs at half the CPU speed
+  
                 _CP0_SET_COUNT(0);
                 LATAbits.LATA4 = 1;
         
@@ -196,8 +205,44 @@ void APP_Tasks ( void )
                 
                 }
 
-              
-            }
+                  unsigned char whoami = 0;
+    
+                  whoami = get_whoami();
+    
+                unsigned char msg[100];  
+                unsigned char imu_data[14];
+
+                int i = 1;
+                for (i; i <= 100; i++)
+                {
+           
+                    sprintf(msg, "IMU Address: %d", whoami);
+                    display_string(msg, 5, 5, WHITE, BLACK);
+          
+                    i2c_read_multiple(SLAVE_ADDR, 0x20, imu_data, 14);
+           
+                    signed char gyroX = imu_data[4] << 8 | imu_data[3];
+                   signed char gyroY = imu_data[6] << 8 | imu_data[5];
+                   signed char gyroZ = imu_data[8] << 8 | imu_data[7];
+                   signed char accelX = imu_data[10] << 8 | imu_data[9];
+                   signed char accelY = imu_data[12] << 8 | imu_data[11];
+                   signed char accelZ = imu_data[14] << 8 | imu_data[13];
+
+                   float accX = (float)(accelX)*0.061*1000;
+                   float accY = (float)(accelY)*0.061*1000;
+
+                   display_barX(62, 62, WHITE, BLACK, ((signed char) (accX)), 5);
+                   display_barY(62, 62, BLUE, BLACK, ((signed char) (accY)), 5);
+
+                   while (_CP0_GET_COUNT() < 4800000)
+                   {
+                       ;
+                   }
+
+                }
+                    
+                LCD_clearScreen(BLACK);
+            
         
             break;
         }

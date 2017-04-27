@@ -56,8 +56,14 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <xc.h>
+#include <sys/attribs.h>
+#include <stdio.h>
 #include "system_config.h"
 #include "system_definitions.h"
+#include "i2c_master_noint.h"
+#include "ILI9163C.h"
+#include "imu.h"
 
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
