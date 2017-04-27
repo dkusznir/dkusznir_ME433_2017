@@ -55,31 +55,31 @@ int main()
 
     while(1) 
     {
-       int i = 1;
-       for (i; i <= 100; i++)
-       {
-           
-           sprintf(msg, "IMU Address: %d", whoami);
-           display_string(msg, 5, 5, WHITE, BLACK);
-          
-           i2c_read_multiple(SLAVE_ADDR, 0x20, imu_data, 14);
-           
-           signed char gyroX = imu_data[4] << 8 | imu_data[3];
-           signed char gyroY = imu_data[6] << 8 | imu_data[5];
-           signed char gyroZ = imu_data[8] << 8 | imu_data[7];
-           signed char accelX = imu_data[10] << 8 | imu_data[9];
-           signed char accelY = imu_data[12] << 8 | imu_data[11];
-           signed char accelZ = imu_data[14] << 8 | imu_data[13];
-           
-           float accX = (float)(accelX)*0.061*1000;
-           float accY = (float)(accelY)*0.061*1000;
+        unsigned char whoami = 0;
+        whoami = get_whoami();
 
-           display_barX(62, 62, WHITE, BLACK, ((signed char) (accX)), 5);
-           display_barY(62, 62, BLUE, BLACK, ((signed char) (accY)), 5);
-           
-       
-       }
-       LCD_clearScreen(BLACK);
+        unsigned char msg[20];
+        unsigned char imu_data[14];
+
+        sprintf(msg, "IMU Address: %d", whoami);
+        display_string(msg, 2, 2, WHITE, BLACK);
+
+        i2c_read_multiple(SLAVE_ADDR, 0x20, imu_data, 14);
+
+        signed char gyroX = imu_data[4] << 8 | imu_data[3];
+        signed char gyroY = imu_data[6] << 8 | imu_data[5];
+        signed char gyroZ = imu_data[8] << 8 | imu_data[7];
+        signed char accelX = imu_data[10] << 8 | imu_data[9];
+        signed char accelY = imu_data[12] << 8 | imu_data[11];
+        signed char accelZ = imu_data[14] << 8 | imu_data[13];
+
+        float acc_x = (float)accelX * 0.61;
+        float acc_y = (float)accelY * 0.61;
+
+        display_barX(62, 62, ((signed char) (acc_x)), 10, BLUE, BLACK);
+        display_barY(62, 62, ((signed char) (acc_y)), 10, WHITE, BLACK);
+        
+        LCD_clearScreen(BLACK);
     }
     return 0;
 }

@@ -249,7 +249,7 @@ void display_bar(int x, int y, int height, int length, unsigned short c1, unsign
     }
 }
 
-void display_barX(int x, int y, char c1, char c2, signed char accX, int w)
+void display_barX(int x, int y, signed char accX, int w,char c1, char c2)
 {
     int i, j;
     
@@ -275,6 +275,7 @@ void display_barX(int x, int y, char c1, char c2, signed char accX, int w)
     }
     else
     {
+        accX = -accX;
         for (i = 0; i <= 49; i++)
         {
             if (i < accX)
@@ -296,7 +297,7 @@ void display_barX(int x, int y, char c1, char c2, signed char accX, int w)
     
 }
 
-void display_barY(int x, int y, char c1, char c2, signed char accY, int w)
+void display_barY(int x, int y, signed char accY, int w,char c1, char c2)
 {
     int i, j;
     
@@ -322,6 +323,7 @@ void display_barY(int x, int y, char c1, char c2, signed char accY, int w)
     }
     else
     {
+        accY = -accY;
         for (i = 0; i <= 49; i++)
         {
             if (i < accY)
@@ -342,4 +344,3 @@ void display_barY(int x, int y, char c1, char c2, signed char accY, int w)
     }
     
 }
-
