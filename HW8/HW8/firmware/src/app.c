@@ -85,9 +85,9 @@ void APP_Tasks(void) {
 
             float acc_x = (float)accelX * 0.61;
             float acc_y = (float)accelY * 0.61;
-
-            display_barY(62, 62, WHITE, BLACK, ((signed char) (acc_y)), 5);
-            display_barX(62, 62, BLUE, BLACK, ((signed char) (acc_x)), 5);
+            
+            display_barX(62, 62, ((signed char) (acc_x)), 10, BLUE, BLACK);
+            display_barY(62, 62, ((signed char) (acc_y)), 10, WHITE, BLACK);
 
            break;
         }
