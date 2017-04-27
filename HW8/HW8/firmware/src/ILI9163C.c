@@ -275,6 +275,7 @@ void display_barX(int x, int y, char c1, char c2, signed char accX, int w)
     }
     else
     {
+        accX = -accX;
         for (i = 0; i <= 49; i++)
         {
             if (i < accX)
@@ -322,6 +323,7 @@ void display_barY(int x, int y, char c1, char c2, signed char accY, int w)
     }
     else
     {
+        accY = -accY;
         for (i = 0; i <= 49; i++)
         {
             if (i < accY)
