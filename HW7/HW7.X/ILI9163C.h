@@ -179,5 +179,7 @@ void LCD_clearScreen(unsigned short); // set the color of every pixel
 void display_char(char c, int x, int y, unsigned short c1, unsigned short c2); // Display char
 void display_string(char * msg, int x, int y,unsigned short c1, unsigned short c2); // Display string
 void display_bar(int x, int y, int height, int length, unsigned short c1, unsigned short c2); // Display bar
+void display_barX(int x, int y, char c1, char c2, signed char accX, int w);
+void display_barY(int x, int y, char c1, char c2, signed char accY, int w);
 
 #endif

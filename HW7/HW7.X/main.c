@@ -1,7 +1,10 @@
 #include <xc.h>           // processor SFR definitions
 #include <sys/attribs.h>  // __ISR macro
 #include <stdio.h>
+#include <math.h>
 #include "ILI9163C.h"
+#include "i2c_master_noint.h"
+#include "imu.h"
 
 // DEVCFG0
 #pragma config DEBUG = OFF // no debugging
@@ -63,23 +66,48 @@ int main()
     // Button input pin
     TRISBbits.TRISB4 = 1;
     
+    SPI1_init();
     LCD_init();
-    LCD_clearScreen(YELLOW);
+    
+    LCD_clearScreen(BLACK);
+
+    IMU_init();
     
     __builtin_enable_interrupts();
+ 
+    unsigned char whoami = 0;
+    whoami = get_whoami();
     
-    char msg[100];
-    float frames_per_second;
-    int i;
-    
-    _CP0_SET_COUNT(0);
-     
+    unsigned char msg[100];  
+    unsigned char imu_data[14];
+
     while(1) 
     {
-        for (i = 0; i < 101; i++)
-        {
+       int i = 1;
+       for (i; i <= 100; i++)
+       {
+           
+           sprintf(msg, "IMU Address: %d", whoami);
+           display_string(msg, 5, 5, WHITE, BLACK);
+           
+           i2c_read_multiple(SLAVE_ADDR, 0x20, imu_data, 14);
+           
+           signed char gyroX = imu_data[4] << 8 | imu_data[3];
+           signed char gyroY = imu_data[6] << 8 | imu_data[5];
+           signed char gyroZ = imu_data[8] << 8 | imu_data[7];
+           signed char accelX = imu_data[10] << 8 | imu_data[9];
+           signed char accelY = imu_data[12] << 8 | imu_data[11];
+           signed char accelZ = imu_data[14] << 8 | imu_data[13];
+           
+           float accX = (float)(accelX)*0.061*1000;
+           float accY = (float)(accelY)*0.061*1000;
 
-            
-        }
+           display_barX(62, 62, YELLOW, BLACK, ((signed char) (accX)), 5);
+           display_barY(62, 62, BLUE, BLACK, ((signed char) (accY)), 5);
+       
+       }
+       LCD_clearScreen(BLACK);
     }
+    return 0;
 }
+

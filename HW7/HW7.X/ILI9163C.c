@@ -248,3 +248,99 @@ void display_bar(int x, int y, int height, int length, unsigned short c1, unsign
         }
     }
 }
+
+void display_barX(int x, int y, char c1, char c2, signed char accX, int w)
+{
+    int i, j;
+    
+    if(accX > 0)
+    {
+        for (i = 0; i <= 49; i++)
+        {
+            if (i < accX)
+            {
+                for (j = 0; j < w; j++)
+                {
+                    LCD_drawPixel(x + i, y + j, c1);
+                }
+            }
+            else
+            {
+                for (j = 0; j < w; j++)
+                {
+                    LCD_drawPixel(x + i, y + j, c2);
+                }
+            }
+        }
+    }
+    else
+    {
+        for (i = 0; i <= 49; i++)
+        {
+            if (i < accX)
+            {
+                for (j = 0; j < w; j++)
+                {
+                    LCD_drawPixel(x - i, y + j, c1);
+                }
+            }
+            else
+            {
+                for (j = 0; j < w; j++)
+                {
+                    LCD_drawPixel(x - i, y + j, c2);
+                }
+            }
+        }
+    }
+    
+}
+
+void display_barY(int x, int y, char c1, char c2, signed char accY, int w)
+{
+    int i, j;
+    
+    if(accY > 0)
+    {
+        for (i = 0; i <=49; i++)
+        {
+            if (i < accY)
+            {
+                for (j = 0; j < w; j++)
+                {
+                    LCD_drawPixel(x + j, y + i, c1);
+                }
+            }
+            else
+            {
+                for (j = 0; j < w; j++)
+                {
+                    LCD_drawPixel(x + j, y + i, c2);
+                }
+            }
+        }
+    }
+    else
+    {
+        accY = -accY;
+        for (i = 0; i < 50; i++)
+        {
+            if (i < accY)
+            {
+                for (j = 0; j < w; j++)
+                {
+                    LCD_drawPixel(x + j, y - i, c1);
+                }
+            }
+            else
+            {
+                for (j = 0; j < w; j++)
+                {
+                    LCD_drawPixel(x + j, y - i, c2);
+                }
+            }
+        }
+    }
+    
+}
+
