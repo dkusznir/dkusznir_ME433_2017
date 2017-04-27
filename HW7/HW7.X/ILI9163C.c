@@ -198,11 +198,11 @@ void display_char(char c, int x, int y, unsigned short c1, unsigned short c2)
     
     for (i = 0; i < 5; i++)
     {
-        if (i + x < 129)
+        if (i + x < 128)
         {
             for (j = 0; j < 8; j++)
             {
-                if (j + y < 129)
+                if (j + y < 128)
                 {
                     if (ASCII[k][i] >> j & 1 == 1)
                     {
@@ -224,7 +224,7 @@ void display_string(char * msg, int x, int y,unsigned short c1, unsigned short c
     
     while (msg[index] != 0)
     {
-        display_char(msg[index], x + (index * 5), y, c1, c2);
+        display_char(msg[index], x + (index * 6), y, c1, c2);
         index++;
     }
 }
@@ -302,7 +302,7 @@ void display_barY(int x, int y, char c1, char c2, signed char accY, int w)
     
     if(accY > 0)
     {
-        for (i = 0; i <=49; i++)
+        for (i = 0; i <= 49; i++)
         {
             if (i < accY)
             {
@@ -322,8 +322,7 @@ void display_barY(int x, int y, char c1, char c2, signed char accY, int w)
     }
     else
     {
-        accY = -accY;
-        for (i = 0; i < 50; i++)
+        for (i = 0; i <= 49; i++)
         {
             if (i < accY)
             {
