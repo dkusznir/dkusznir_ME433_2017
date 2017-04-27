@@ -178,6 +178,26 @@ void APP_Tasks ( void )
 
         case APP_STATE_SERVICE_TASKS:
         {
+            while(1) 
+            {
+                // use _CP0_SET_COUNT(0) and _CP0_GET_COUNT() to test the PIC timing
+                // remember the core timer runs at half the CPU speed
+                _CP0_SET_COUNT(0);
+                LATAbits.LATA4 = 1;
+        
+                while(_CP0_GET_COUNT() < 12000) //12000 in order to obtain 1KHz
+                {
+                    // Button pressed
+                    while(!PORTBbits.RB4)
+                    {
+                        // Turn off LED
+                        LATAbits.LATA4 = 0;
+                    }
+                
+                }
+
+              
+            }
         
             break;
         }
@@ -192,24 +212,6 @@ void APP_Tasks ( void )
             break;
         }
         
-        while(1) 
-        {
-            // use _CP0_SET_COUNT(0) and _CP0_GET_COUNT() to test the PIC timing
-            // remember the core timer runs at half the CPU speed
-            _CP0_SET_COUNT(0);
-            while(_CP0_GET_COUNT() < 12000) //12000 in order to obtain 1KHz
-            {
-                // Button pressed
-                while(!PORTBbits.RB4)
-                {
-                    // Turn off LED
-                    LATAbits.LATA4 = 0;
-                }
-            }
-        
-            LATAINV = 0b10000;
-              
-        }
     }
     
     
