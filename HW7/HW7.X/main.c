@@ -102,7 +102,7 @@ int main()
            float accX = (float)(accelX)*0.061*1000;
            float accY = (float)(accelY)*0.061*1000;
 
-           display_barX(62, 62, YELLOW, BLACK, ((signed char) (accX)), 5);
+           display_barX(62, 62, WHITE, BLACK, ((signed char) (accX)), 5);
            display_barY(62, 62, BLUE, BLACK, ((signed char) (accY)), 5);
        
        }
