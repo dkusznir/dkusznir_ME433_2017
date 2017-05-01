@@ -449,7 +449,6 @@ void APP_Tasks(void) {
             // Check if user enters 'r' (ASCII 0x72)
             if (appData.readBuffer[0] == 0x72)
             {
-                int i, len;
                 unsigned char imu_data[14];
                 
                 i2c_read_multiple(SLAVE_ADDR, 0x20, imu_data, 14);
@@ -470,6 +469,23 @@ void APP_Tasks(void) {
                 
                 len = sprintf(dataOut, "%d, %0.2f, %0.2f, %0.2f, %0.2f, %0.2f, %0.2f\r\n", i, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z);
                 
+                if (i > 100) 
+                {
+                    i = 0;
+                    appData.readBuffer[0] = 0x00;
+                    len = sprintf(dataOut, "\n****Waiting for request****\r\n");
+                } 
+                
+                else 
+                {
+                    i++;
+                }
+            }
+            
+            else
+            {
+                len = 1;
+                dataOut[0] = 0;
             }
             if (appData.isReadComplete) {
                 USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
