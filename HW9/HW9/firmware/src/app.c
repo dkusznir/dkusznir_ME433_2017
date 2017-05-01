@@ -51,6 +51,10 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include "app.h"
 #include <stdio.h>
 #include <xc.h>
+#include <sys/attribs.h>
+#include <stdio.h>
+#include "i2c_master_noint.h"
+#include "imu.h"
 
 // *****************************************************************************
 // *****************************************************************************
@@ -330,8 +334,23 @@ void APP_Initialize(void) {
 
     /* Set up the read buffer */
     appData.readBuffer = &readBuffer[0];
+    
+    // LED output pin 
+    TRISAbits.TRISA4 = 0;
+    
+    // Button input pin
+    TRISBbits.TRISB4 = 1;
+    
+    LATAbits.LATA4 = 0;   
+        
+    ANSELBbits.ANSB2 = 0;
+    ANSELBbits.ANSB3 = 0;
 
+    IMU_init();
+    
     startTime = _CP0_GET_COUNT();
+
+    
 }
 
 /******************************************************************************
@@ -427,8 +446,31 @@ void APP_Tasks(void) {
             appData.isWriteComplete = false;
             appData.state = APP_STATE_WAIT_FOR_WRITE_COMPLETE;
 
-            len = sprintf(dataOut, "%d\r\n", i);
-            i++;
+            // Check if user enters 'r' (ASCII 0x72)
+            if (appData.readBuffer[0] == 0x72)
+            {
+                int i, len;
+                unsigned char imu_data[14];
+                
+                i2c_read_multiple(SLAVE_ADDR, 0x20, imu_data, 14);
+                
+                signed char gyroX = imu_data[4] << 8 | imu_data[3];
+                signed char gyroY = imu_data[6] << 8 | imu_data[5];
+                signed char gyroZ = imu_data[8] << 8 | imu_data[7];
+                signed char accelX = imu_data[10] << 8 | imu_data[9];
+                signed char accelY = imu_data[12] << 8 | imu_data[11];
+                signed char accelZ = imu_data[14] << 8 | imu_data[13];
+                
+                float gyro_x = (float)gyroX * 0.035;
+                float gyro_y = (float)gyroY * 0.035;
+                float gyro_z = (float)gyroZ * 0.035;
+                float acc_x = (float)accelX * 0.0061;
+                float acc_y = (float)accelY * 0.0061;
+                float acc_z = (float)accelZ * 0.0061;
+                
+                len = sprintf(dataOut, "%d, %0.2f, %0.2f, %0.2f, %0.2f, %0.2f, %0.2f\r\n", i, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z);
+                
+            }
             if (appData.isReadComplete) {
                 USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
                         &appData.writeTransferHandle,
