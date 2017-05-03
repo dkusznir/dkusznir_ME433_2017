@@ -62,6 +62,24 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 // *****************************************************************************
 
+#define MAF_LENGTH 4
+#define FIR_LENGTH 4
+#define a 0.2
+#define b 0.8               // a + b = 1
+
+// Initialize MAF
+int MAF_array[MAF_LENGTH];
+int MAF = 0;
+
+// Initialize IIR
+float IIR_prev = 0;
+float IIR_new = 0;
+
+// Initialize FIR
+float FIR_weights[FIR_LENGTH] = {0.01, 0.1, 0.1, 0.01};         // Just putting in some random values for now
+float FIR = 0;
+int FIR_samples[FIR_LENGTH];
+
 uint8_t APP_MAKE_BUFFER_DMA_READY dataOut[APP_READ_BUFFER_SIZE];
 uint8_t APP_MAKE_BUFFER_DMA_READY readBuffer[APP_READ_BUFFER_SIZE];
 int len, i = 0;
@@ -466,6 +484,13 @@ void APP_Tasks(void) {
                 float acc_x = (float)accelX * 0.0061;
                 float acc_y = (float)accelY * 0.0061;
                 float acc_z = (float)accelZ * 0.0061;
+                
+                // **DSP Filters**
+                
+                // MAF
+                // IIR
+                // FIR
+                
                 
                 len = sprintf(dataOut, "%d, %0.2f, %0.2f, %0.2f, %0.2f, %0.2f, %0.2f\r\n", i, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z);
                 
