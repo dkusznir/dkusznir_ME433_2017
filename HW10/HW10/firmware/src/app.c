@@ -77,12 +77,13 @@ float IIR_new = 0;
 
 // Initialize FIR
 float FIR_weights[FIR_LENGTH] = {0.01, 0.1, 0.1, 0.01};         // Just putting in some random values for now
+float FIR_samples[FIR_LENGTH];
 float FIR = 0;
-int FIR_samples[FIR_LENGTH];
+int FIR_count = 0;
 
 uint8_t APP_MAKE_BUFFER_DMA_READY dataOut[APP_READ_BUFFER_SIZE];
 uint8_t APP_MAKE_BUFFER_DMA_READY readBuffer[APP_READ_BUFFER_SIZE];
-int len, i = 0;
+int len, i = 0, j = 0;
 int startTime = 0;
 
 // *****************************************************************************
@@ -468,6 +469,8 @@ void APP_Tasks(void) {
             if (appData.readBuffer[0] == 0x72)
             {
                 unsigned char imu_data[14];
+                int count;
+                int MAF_sum = 0;
                 
                 i2c_read_multiple(SLAVE_ADDR, 0x20, imu_data, 14);
                 
@@ -488,8 +491,40 @@ void APP_Tasks(void) {
                 // **DSP Filters**
                 
                 // MAF
+                MAF_array[j] = acc_z;
+                
+                if (j < (MAF_LENGTH - 1))
+                {
+                    j++;
+                }
+                
+                else
+                {
+                    j = 0;
+                }
+                
+                for (count = 0; count < MAF_LENGTH; count++)
+                {
+                    MAF_sum = MAF_sum + MAF_array[count];
+                }
+                
+                MAF = MAF_sum / MAF_LENGTH;
+                
                 // IIR
+                IIR_new = (a*IIR_prev) + (b*acc_z);
+                IIR_prev = IIR_new;
+                
                 // FIR
+                int k;
+                
+                FIR_samples[FIR_count] = acc_z;
+                
+                for (k = 0; k < FIR_LENGTH; k++)
+                {
+                    FIR = FIR + FIR_weights[k] * FIR_samples[k] + FIR_weights[FIR_LENGTH];
+                }
+                
+                FIR_count++;
                 
                 
                 len = sprintf(dataOut, "%d, %0.2f, %0.2f, %0.2f, %0.2f, %0.2f, %0.2f\r\n", i, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z);
