@@ -78,7 +78,7 @@ float IIR_prev = 0;
 float IIR_new = 0;
 
 // Initialize FIR
-float FIR_weights[FIR_LENGTH] = {0.01, 0.1, 0.1, 0.01};         // Just putting in some random values for now
+float FIR_weights[FIR_LENGTH] = {0.0338, 0.283, 0.4521, 0.283, 0.0338};        // Just putting in some random values for now
 float FIR_samples[FIR_LENGTH];
 float FIR = 0;
 int FIR_count = 0;
@@ -513,24 +513,36 @@ void APP_Tasks(void) {
                 IIR_prev = IIR_new;
                 
                 // FIR
-                int k;
-                
-                FIR_samples[FIR_count] = acc_z;
-                
-                for (k = 0; k < FIR_LENGTH; k++)
+                for (j = 0; j < FIR_LENGTH - 1; j++) 
                 {
-                    FIR = FIR + FIR_weights[k] * FIR_samples[k] + FIR_weights[FIR_LENGTH];
+                    FIR_samples[j] = FIR_samples[j+1]; 
                 }
                 
-                FIR_count++;
+                FIR_samples[FIR_LENGTH - 1] = acc_z; 
                 
-                if (FIR_count == FIR_LENGTH)
+                for (j = 0; j < FIR_LENGTH; j++) 
                 {
-                    FIR_count = 0;
+                    FIR = FIR + FIR_samples[j]*FIR_weights[j]; 
                 }
+//                int k;
+//                
+//                FIR_samples[FIR_count] = acc_z;
+//                
+//                for (k = 0; k < FIR_LENGTH; k++)
+//                {
+//                    FIR = FIR + FIR_weights[k] * FIR_samples[k] + FIR_weights[FIR_LENGTH];
+//                }
+//                
+//                FIR_count++;
+//                
+//                if (FIR_count == FIR_LENGTH)
+//                {
+//                    FIR_count = 0;
+//                }
                 
                 len = sprintf(dataOut, "%d, %0.2f, %0.2f, %0.2f, %0.2f\r\n", i, acc_z, MAF, IIR_new, FIR);
                 
+                FIR = 0;
                 if (i > 100) 
                 {
                     i = 0;

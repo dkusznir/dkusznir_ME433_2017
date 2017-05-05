@@ -14,7 +14,7 @@ maf = []
 iir = []
 fir = []
 
-for i in range(98):
+for i in range(99):
     serial_line = ser.readline()
     # print serial_line
     data_read = serial_line.split(", ")
