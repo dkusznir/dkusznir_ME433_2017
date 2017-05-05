@@ -68,8 +68,10 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #define b 0.8               // a + b = 1
 
 // Initialize MAF
-int MAF_array[MAF_LENGTH];
-int MAF = 0;
+float MAF_array[MAF_LENGTH];
+float MAF = 0;
+int MAF_count = 0;
+int MAF_sum = 0;
 
 // Initialize IIR
 float IIR_prev = 0;
@@ -469,8 +471,6 @@ void APP_Tasks(void) {
             if (appData.readBuffer[0] == 0x72)
             {
                 unsigned char imu_data[14];
-                int count;
-                int MAF_sum = 0;
                 
                 i2c_read_multiple(SLAVE_ADDR, 0x20, imu_data, 14);
                 
@@ -491,24 +491,22 @@ void APP_Tasks(void) {
                 // **DSP Filters**
                 
                 // MAF
-                MAF_array[j] = acc_z;
-                
-                if (j < (MAF_LENGTH - 1))
-                {
-                    j++;
-                }
-                
-                else
-                {
-                    j = 0;
-                }
+                int count;
+                MAF_array[MAF_count] = acc_z;
                 
                 for (count = 0; count < MAF_LENGTH; count++)
                 {
-                    MAF_sum = MAF_sum + MAF_array[count];
+                    MAF = MAF + MAF_array[count];
                 }
                 
-                MAF = MAF_sum / MAF_LENGTH;
+                MAF = MAF / MAF_LENGTH;
+                
+                MAF_count++;
+                
+                if (MAF_count == MAF_LENGTH)
+                {
+                    MAF_count = 0;
+                }
                 
                 // IIR
                 IIR_new = (a*IIR_prev) + (b*acc_z);
@@ -526,8 +524,12 @@ void APP_Tasks(void) {
                 
                 FIR_count++;
                 
+                if (FIR_count == FIR_LENGTH)
+                {
+                    FIR_count = 0;
+                }
                 
-                len = sprintf(dataOut, "%d, %0.2f, %0.2f, %0.2f, %0.2f, %0.2f, %0.2f\r\n", i, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z);
+                len = sprintf(dataOut, "%d, %0.2f, %0.2f, %0.2f, %0.2f\r\n", i, acc_z, MAF, IIR_new, FIR);
                 
                 if (i > 100) 
                 {
