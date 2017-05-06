@@ -1,3 +1,4 @@
+
 /*******************************************************************************
   MPLAB Harmony Application Source File
   
@@ -49,7 +50,12 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 
 #include "app.h"
-
+#include <stdio.h>
+#include <xc.h>
+#include <sys/attribs.h>
+#include <stdio.h>
+#include "i2c_master_noint.h"
+#include "imu.h"
 
 // *****************************************************************************
 // *****************************************************************************
@@ -255,6 +261,19 @@ void APP_Initialize(void) {
     //appData.emulateMouse = true;
     appData.hidInstance = 0;
     appData.isMouseReportSendBusy = false;
+    
+    // LED output pin 
+    TRISAbits.TRISA4 = 0;
+    
+    // Button input pin
+    TRISBbits.TRISB4 = 1;
+    
+    LATAbits.LATA4 = 0;   
+        
+    ANSELBbits.ANSB2 = 0;
+    ANSELBbits.ANSB3 = 0;
+
+    IMU_init();
 }
 
 /******************************************************************************
@@ -265,6 +284,9 @@ void APP_Initialize(void) {
  */
 
 void APP_Tasks(void) {
+
+    static uint8_t inc = 0;
+
     /* Check the application's current state. */
     switch (appData.state) {
             /* Application's initial state. */
@@ -299,13 +321,33 @@ void APP_Tasks(void) {
             break;
 
         case APP_STATE_MOUSE_EMULATE:
-            
+        
             // every 50th loop, or 20 times per second
+            appData.mouseButton[0] = MOUSE_BUTTON_STATE_RELEASED;
+            appData.mouseButton[1] = MOUSE_BUTTON_STATE_RELEASED;
+            
+            unsigned char imu_data[14];
+            i2c_read_multiple(SLAVE_ADDR, 0x20, imu_data, 14);
+            
+            signed char accelX = imu_data[10] << 8 | imu_data[9];
+            signed char accelY = imu_data[12] << 8 | imu_data[11];
+            
+            float acc_x = (float)accelX * 0.0061;
+            float acc_y = (float)accelY * 0.0061;
 
-                appData.mouseButton[0] = MOUSE_BUTTON_STATE_RELEASED;
-                appData.mouseButton[1] = MOUSE_BUTTON_STATE_RELEASED;
-                appData.xCoordinate = (int8_t) 2;
-                appData.yCoordinate = (int8_t) 2;
+            if (inc == 5)
+            {
+                appData.xCoordinate = (int8_t) acc_x;
+                appData.yCoordinate = (int8_t) acc_y;
+                inc = 0;
+            }
+            
+            else
+            {
+                appData.xCoordinate = (int8_t) 0;
+                appData.yCoordinate = (int8_t) 0;
+                inc++;
+            }
 
             if (!appData.isMouseReportSendBusy) {
                 /* This means we can send the mouse report. The
@@ -360,7 +402,7 @@ void APP_Tasks(void) {
             }
 
             break;
-
+            
         case APP_STATE_ERROR:
 
             break;
