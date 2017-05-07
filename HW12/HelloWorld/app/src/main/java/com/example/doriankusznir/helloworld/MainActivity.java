@@ -2,14 +2,19 @@ package com.example.doriankusznir.helloworld;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
+import android.widget.Button;
 
 public class MainActivity extends AppCompatActivity
 {
+    public static final int INC_AMOUNT = 5;
     SeekBar myControl;
     TextView myTextView;
+    Button increase;
+    Button decrease;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -22,7 +27,14 @@ public class MainActivity extends AppCompatActivity
         myTextView = (TextView) findViewById(R.id.textView01);      // Instantiate TextView
         myTextView.setText("Move Seek Bar to Update Values!");      // Just some random text
 
+        increase = (Button) findViewById(R.id.increaseButton);      // Instantiate Increase Button
+        increase.setText("Increase");
+        decrease = (Button) findViewById(R.id.decreaseButton);      // Instantiate Decrease Button
+        decrease.setText("Decrease");
+
         setMyControlListener();
+        setIncrease();
+        setDecrease();
 
     }
 
@@ -55,6 +67,31 @@ public class MainActivity extends AppCompatActivity
             }
         });
     }
+
+    private void setIncrease()
+    {
+        increase.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                myControl.setProgress(myControl.getProgress() + INC_AMOUNT);
+            }
+        });
+    }
+
+    private void setDecrease()
+    {
+        decrease.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                myControl.setProgress(myControl.getProgress() - INC_AMOUNT);
+            }
+        });
+    }
+
 }
 
 
