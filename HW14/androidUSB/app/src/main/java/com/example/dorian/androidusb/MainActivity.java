@@ -72,6 +72,11 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View v)
             {
                 myTextView2.setText("Value on click is " + myControl.getProgress());
+
+                String sendString = String.valueOf(myControl.getProgress()) + '\n';
+                try {
+                    sPort.write(sendString.getBytes(), 10); // 10 is the timeout
+                } catch (IOException e) { }
             }
         });
 
