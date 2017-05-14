@@ -100,20 +100,30 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         final Canvas c = mSurfaceHolder.lockCanvas();
         if (c != null) {
-            int thresh = 0; // comparison value
-            int[] pixels = new int[bmp.getWidth()]; // pixels[] is the RGBA data
-            int startY = 200; // which row in the bitmap to analyze to read
-            bmp.getPixels(pixels, 0, bmp.getWidth(), 0, startY, bmp.getWidth(), 1);
 
-            // in the row, see if there is more green than red
-            for (int i = 0; i < bmp.getWidth(); i++) {
-                if ((green(pixels[i]) - red(pixels[i])) > thresh) {
-                    pixels[i] = rgb(0, 255, 0); // over write the pixel with pure green
+            for (int j = 0; j < bmp.getHeight(); j++)
+            {
+                if (j % 4 == 0)
+                {
+                    int thresh = 50; // comparison value
+                    int[] pixels = new int[bmp.getWidth()]; // pixels[] is the RGBA data
+                    int startY = j; // which row in the bitmap to analyze to read
+                    bmp.getPixels(pixels, 0, bmp.getWidth(), 0, startY, bmp.getWidth(), 1);
+
+                    // in the row, see if there is more green than red
+                    for (int i = 0; i < bmp.getWidth(); i++) {
+                        if ((green(pixels[i]) - red(pixels[i])) > thresh) {
+                            pixels[i] = rgb(0, 255, 0); // over write the pixel with pure green
+                        }
+                    }
+
+                    // update row
+                    bmp.setPixels(pixels, 0, bmp.getWidth(), 0, startY, bmp.getWidth(), 1);
                 }
+
             }
 
-            // update the row
-            bmp.setPixels(pixels, 0, bmp.getWidth(), 0, startY, bmp.getWidth(), 1);
+
         }
 
         // draw a circle at some position
