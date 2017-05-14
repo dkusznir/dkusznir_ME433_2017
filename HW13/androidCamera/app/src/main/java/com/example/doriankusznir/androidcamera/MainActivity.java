@@ -101,11 +101,11 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         final Canvas c = mSurfaceHolder.lockCanvas();
         if (c != null) {
 
-            for (int j = 0; j < bmp.getHeight(); j++)
+            for (int j = 0; j < bmp.getHeight(); j++)           // Loop through each row
             {
-                if (j % 4 == 0)
+                if (j % 4 == 0)                                 // Only look at every 4th row (better performance and ability to see green lines drawn over green objects)
                 {
-                    int thresh = 50; // comparison value
+                    int thresh = 50; // comparison value. changed this to be higher for better performance
                     int[] pixels = new int[bmp.getWidth()]; // pixels[] is the RGBA data
                     int startY = j; // which row in the bitmap to analyze to read
                     bmp.getPixels(pixels, 0, bmp.getWidth(), 0, startY, bmp.getWidth(), 1);
