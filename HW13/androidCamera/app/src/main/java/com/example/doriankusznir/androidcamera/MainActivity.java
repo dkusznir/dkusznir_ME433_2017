@@ -41,6 +41,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     private TextView mTextView;
     SeekBar myControl;
     TextView threshValue;
+    int tValue;
 
     static long prevtime = 0; // for FPS calculation
 
@@ -55,6 +56,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         myControl = (SeekBar) findViewById(R.id.seek1);
         threshValue = (TextView) findViewById(R.id.textView01);
         threshValue.setText("Change threshold filter value (default: 50).");
+        tValue = 50;
 
         setMyControlListener();
 
@@ -117,7 +119,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             {
                 if (j % 8 == 0)                                 // Only look at every 8th row (better performance and ability to see green lines drawn over green objects)
                 {
-                    int thresh = 50; // comparison value. changed this to be higher for better performance
+                    int thresh = tValue; // comparison value. changed this to be higher for better performance
                     int[] pixels = new int[bmp.getWidth()]; // pixels[] is the RGBA data
                     int startY = j; // which row in the bitmap to analyze to read
                     bmp.getPixels(pixels, 0, bmp.getWidth(), 0, startY, bmp.getWidth(), 1);
@@ -162,6 +164,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 progressChanged = progress;
+                tValue = progress;
 
                 threshValue.setText("Threshold (Green Filter) Value: " + progress);
 
