@@ -103,7 +103,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
             for (int j = 0; j < bmp.getHeight(); j++)           // Loop through each row
             {
-                if (j % 4 == 0)                                 // Only look at every 4th row (better performance and ability to see green lines drawn over green objects)
+                if (j % 8 == 0)                                 // Only look at every 8th row (better performance and ability to see green lines drawn over green objects)
                 {
                     int thresh = 50; // comparison value. changed this to be higher for better performance
                     int[] pixels = new int[bmp.getWidth()]; // pixels[] is the RGBA data
