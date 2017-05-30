@@ -1,6 +1,4 @@
-package com.example.doriankusznir.androidcamera;
-
-// libraries
+package com.example.doriankusznir.robo_camera_app;
 
 import android.Manifest;
 import android.app.Activity;
@@ -18,15 +16,11 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.WindowManager;
-import android.widget.TextView;
 import android.widget.SeekBar;
-import android.widget.SeekBar.OnSeekBarChangeListener;
-
-import org.w3c.dom.Text;
+import android.widget.TextView;
 
 import java.io.IOException;
 
-import static android.graphics.Color.blue;
 import static android.graphics.Color.green;
 import static android.graphics.Color.red;
 import static android.graphics.Color.rgb;
@@ -187,7 +181,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
     private void setMyControlListener()
     {
-        myControl.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+        myControl.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 
             int progressChanged = 0;
             @Override
