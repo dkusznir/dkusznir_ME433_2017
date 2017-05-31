@@ -336,6 +336,16 @@ void APP_Initialize(void) {
 
     /* Set up the read buffer */
     appData.readBuffer = &readBuffer[0];
+    
+    /* Set up motor communication and control*/
+    /* OC1 = B15, OC2 = B14; Using timer2, 10kHZ */
+    
+    // Set up Timer
+    T2CONbits.TCKPS = 0;                // Timer2 prescaler N=1
+    PR2 = 4799;                         // P2 = (3999 + 1) * 1 * 20.8ns = 10kHz
+    TMR2 = 0;                           // Set timer2 = 0
+    T2CONbits.ON = 1;                   // Turn on timer2
+    
 
     startTime = _CP0_GET_COUNT();
 }
