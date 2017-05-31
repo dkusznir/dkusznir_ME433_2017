@@ -118,7 +118,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
             for (int j = 0; j < bmp.getHeight(); j++)           // Loop through each row
             {
-                if (j % 8 == 0)                                 // Only look at every 8th row (better performance and ability to see green lines drawn over green objects)
+                if (j % 16 == 0)                                 // Only look at every 8th row (better performance and ability to see green lines drawn over green objects)
                 {
                     int thresh = tValue; // comparison value. changed this to be higher for better performance
                     int[] pixels = new int[bmp.getWidth()]; // pixels[] is the RGBA data
@@ -127,38 +127,24 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
                     int start = 0;
                     int stop = 0;
+                    int count = 0;
                     // in the row, see if there is more green than red
                     for (int i = 0; i < bmp.getWidth(); i++)
                     {
-                        if ((green(pixels[i]) - red(pixels[i])) > thresh)
-                        {
+                        int rg = Math.abs(red(pixels[i]) - green(pixels[i]));
+                        int rb = Math.abs(red(pixels[i]) - blue(pixels[i]));
+                        int gb = Math.abs(green(pixels[i]) - blue(pixels[i]));
 
+                        if (rg < 15 && rb < 15 && gb < 15)
+                        {
                             pixels[i] = rgb(0, 255, 0); // over write the pixel with pure green
 
                         }
 
-                        else
-                        {
-                            if (i > 0 && i < bmp.getWidth() - 1)
-                            {
-                                if ((green(pixels[i - 1]) - red(pixels[i - 1])) > thresh)
-                                {
-                                    start = i;
-                                }
-
-                                else if ((green(pixels[i + 1]) - red(pixels[i + 1])) > thresh)
-                                {
-                                    stop = i;
-                                    int mid = (stop - start) / 2;
-                                    Log.i("Testing", String.valueOf(mid));
-                                    canvas.drawCircle(mid, j, 10, paint1);
-                                }
-
-
-                            }
-                        }
-
                     }
+
+                    //int mid = count / 2;
+                    //canvas.drawCircle(mid, j, 10, paint1);
 
                     // update row
                     bmp.setPixels(pixels, 0, bmp.getWidth(), 0, startY, bmp.getWidth(), 1);
