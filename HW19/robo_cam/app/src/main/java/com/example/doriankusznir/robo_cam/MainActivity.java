@@ -135,17 +135,25 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                         int rb = Math.abs(red(pixels[i]) - blue(pixels[i]));
                         int gb = Math.abs(green(pixels[i]) - blue(pixels[i]));
 
-                        if (rg < 15 && rb < 15 && gb < 15)
+                        if (rg < 20 && rb < 20 && gb < 20)
                         {
                             pixels[i] = rgb(0, 255, 0); // over write the pixel with pure green
+                            count++;
 
                         }
 
+
                     }
 
-                    //int mid = count / 2;
-                    //canvas.drawCircle(mid, j, 10, paint1);
-
+                    canvas.drawCircle((count*(count/2)) / count, j, 10, paint1);
+                    Log.i("Count", String.valueOf(count));
+/*
+                    if (count > 0)
+                    {
+                        int mid = count / 2;
+                        canvas.drawCircle(mid, j, 10, paint1);
+                    }
+*/
                     // update row
                     bmp.setPixels(pixels, 0, bmp.getWidth(), 0, startY, bmp.getWidth(), 1);
                 }
