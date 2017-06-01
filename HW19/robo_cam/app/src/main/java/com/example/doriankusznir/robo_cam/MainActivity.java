@@ -152,6 +152,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                         com = pix_total / count;
                     }
 
+                    mTextView.setText("COM " + com);
 
                     canvas.drawCircle(com, j, 10, paint1);
                     Log.i("Count", String.valueOf(com));
@@ -180,11 +181,13 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         c.drawBitmap(bmp, 0, 0, null);
         mSurfaceHolder.unlockCanvasAndPost(c);
 
+        /*
         // calculate the FPS to see how fast the code is running
         long nowtime = System.currentTimeMillis();
         long diff = nowtime - prevtime;
-        mTextView.setText("FPS " + 1000 / diff);
+        mTextView.setText("COM " + com);
         prevtime = nowtime;
+        */
     }
 
     private void setMyControlListener()
