@@ -114,20 +114,23 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         mTextureView.getBitmap(bmp);
 
         final Canvas c = mSurfaceHolder.lockCanvas();
+
+        int com = 320;                                          // Default center point of width of SurfaceView (640/2 = 320)
+
         if (c != null) {
 
             for (int j = 0; j < bmp.getHeight(); j++)           // Loop through each row
             {
-                if (j % 16 == 0)                                 // Only look at every 8th row (better performance and ability to see green lines drawn over green objects)
+                if (j % 16 == 0)                                 // Only look at every 16th row (better performance and ability to see green lines drawn over green objects)
                 {
                     int thresh = tValue; // comparison value. changed this to be higher for better performance
                     int[] pixels = new int[bmp.getWidth()]; // pixels[] is the RGBA data
                     int startY = j; // which row in the bitmap to analyze to read
                     bmp.getPixels(pixels, 0, bmp.getWidth(), 0, startY, bmp.getWidth(), 1);
 
-                    int start = 0;
-                    int stop = 0;
+                    int pix_total = 0;
                     int count = 0;
+
                     // in the row, see if there is more green than red
                     for (int i = 0; i < bmp.getWidth(); i++)
                     {
@@ -135,18 +138,23 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                         int rb = Math.abs(red(pixels[i]) - blue(pixels[i]));
                         int gb = Math.abs(green(pixels[i]) - blue(pixels[i]));
 
-                        if (rg < 20 && rb < 20 && gb < 20)
+                        if (rg < thresh && rb < thresh && gb < thresh)
                         {
                             pixels[i] = rgb(0, 255, 0); // over write the pixel with pure green
+                            pix_total += i;
                             count++;
 
                         }
-
-
                     }
 
-                    canvas.drawCircle((count*(count/2)) / count, j, 10, paint1);
-                    Log.i("Count", String.valueOf(count));
+                    if (count > 0)
+                    {
+                        com = pix_total / count;
+                    }
+
+
+                    canvas.drawCircle(com, j, 10, paint1);
+                    Log.i("Count", String.valueOf(com));
 /*
                     if (count > 0)
                     {
