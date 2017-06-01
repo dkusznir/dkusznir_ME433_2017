@@ -69,6 +69,9 @@ int rxPos = 0; // how much data has been stored
 int gotRx = 0; // the flag
 int rxVal = 0; // a place to store the int that was received
 
+// Set default speeds to 0 
+int pwm1, pwm2 = 50;
+
 // *****************************************************************************
 /* Application Data
   Summary:
@@ -324,7 +327,7 @@ void APP_Initialize(void) {
     /* Write Transfer Handle */
     appData.writeTransferHandle = USB_DEVICE_CDC_TRANSFER_HANDLE_INVALID;
 
-    /* Intialize the read complete flag */
+    /* Initialize the read complete flag */
     appData.isReadComplete = true;
 
     /*Initialize the write complete flag*/
@@ -338,15 +341,44 @@ void APP_Initialize(void) {
     appData.readBuffer = &readBuffer[0];
     
     /* Set up motor communication and control*/
-    /* OC1 = B15, OC2 = B14; Using timer2, 10kHZ */
+    /* OC1 = B15, OC2 = B14; Using timer2, 10kHZ (recommended) */
     
-    // Set up Timer
-    T2CONbits.TCKPS = 0;                // Timer2 prescaler N=1
-    PR2 = 4799;                         // P2 = (3999 + 1) * 1 * 20.8ns = 10kHz
+    // Set up Digital Output for Motor Directions, B14 & B15
+    TRISBbits.TRISB14 = 0; 
+    TRISBbits.TRISB15 = 0;
+    
+    // B7 and B8 are OC pins
+    RPB7Rbits.RPB7R = 0b0101; // OC1
+    RPB8Rbits.RPB8R = 0b0101; // OC2
+    
+    // Set up timer2 for motors
+    T2CONbits.TCKPS = 1;                // Timer2 prescaler N=1 (1:1)
+    PR2 = 7999;                         // P2 = (7999 + 1) * 1 * 12.5ns = 0.00001 uS / 10kHz
     TMR2 = 0;                           // Set timer2 = 0
-    T2CONbits.ON = 1;                   // Turn on timer2
     
+    // Set up timer3 for servo
+    T3CONbits.TCKPS = 1;                // Time3 prescaler N=1 (1:1)
+    PR3 = 1599;                         // P3 = (1599 + 1) * 1 * 12.5ns = 0.00005 uS / 50kHZ
+    TMR3 = 0;                           // Set timer3 = 0
+    
+    // Set up OC1
+    OC1CONbits.OCM = 0b110;             // Set PWM mode without fault pin
+    OC1CONbits.OCTSEL = 0;              // Use timer2
+    OC1RS = 4000;                       // Duty cycle = OC1RS / (PR2 + 1) = 50% (trying 50% as initial value)
+    OC1R = 4000;
+    
+    // Set up OC2
+    OC2CONbits.OCM = 0b110;             // Set PWM mode without fault pin
+    OC2CONbits.OCTSEL = 0;              // Use timer2
+    OC2RS = 4000;                       // Duty cycle = OC1RS / (PR2 + 1) = 50% (trying 50% as initial value)
+    OC2R = 4000;
+    
+    T2CONbits.ON = 1;                   // Turn on timer2
+    //T3CONbits.ON = 1;                 // Turn on timer3
+    OC1CONbits.ON = 1;                  // Turn on OC1
+    OC2CONbits.ON = 1;                  // Turn on OC2
 
+    
     startTime = _CP0_GET_COUNT();
 }
 
@@ -410,8 +442,12 @@ void APP_Tasks(void) {
                     if (appData.readBuffer[ii] == '\n' || appData.readBuffer[ii] == '\r') 
                     {
                         rx[rxPos] = 0; // end the array
-                        sscanf(rx, "%d", &rxVal); // get the int out of the array
+                        sscanf(rx, "%d, %d", &pwm1, &pwm2); // get the int out of the array. Later will only be COM value and we adjust PWM based on that.
                         gotRx = 1; // set the flag
+                        
+                        speed_control(pwm1, pwm2);              // Cap speed if necessary
+                        direction_control(pwm1, pwm2);          // Given speed (possibly adjusted/capped), go forward or backward
+                        
                         break; // get out of the while loop
                     } 
                     
@@ -472,23 +508,31 @@ void APP_Tasks(void) {
 
             len = sprintf(dataOut, "%d\r\n", i);
             i++;
-            if (gotRx) {
-                len = sprintf(dataOut, "got: %d\r\n", rxVal);
-                i++;
+            if (gotRx) 
+            {
+                len = sprintf(dataOut, "PWM1: %d, PWM2: %d, OC1: %d, OC2: %d\r\n", pwm1, pwm2, OC1R, OC2R);     // Print out PWM/OC values
                 USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
                         &appData.writeTransferHandle,
                         dataOut, len,
                         USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
                 rxPos = 0;
                 gotRx = 0;
-            } else {
-                len = sprintf(dataOut, "%d\r\n", i);
-                i++;
+            }
+            
+            else
+            {
+                //len = sprintf(dataOut, "%d\r\n", i);
+                //i++;
+                len = 1;
+                dataOut[0] = 0;
+                
                 USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
-                        &appData.writeTransferHandle, dataOut, len,
+                    &appData.writeTransferHandle, dataOut, len,
                         USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
+                
                 startTime = _CP0_GET_COUNT();
             }
+            
             break;
 
         case APP_STATE_WAIT_FOR_WRITE_COMPLETE:
@@ -511,6 +555,62 @@ void APP_Tasks(void) {
         default:
             break;
     }
+}
+
+void speed_control(int a, int b)
+{
+    // Cap magnitude at +/- 100 for both motors
+    
+    /* Motor 1 */
+    if (a > 100) 
+    { 
+        a = 100; 
+    } 
+    
+    if (a < -100) 
+    { 
+        a = -100; 
+    }
+    
+    /* Motor 2 */
+    if (b > 100) 
+    { 
+        b = 100; 
+    }
+    
+    if (b < -100) 
+    { 
+        b = -100; 
+    }
+}
+
+void direction_control(int a, int b)
+{
+    /* Motor 1 */
+    if (a > 0)                                  // Go forward
+    { 
+        OC1RS = (a * (PR2 + 1)) / 100;
+        LATBbits.LATB14 = 1; 
+    } 
+    
+    else                                        // Go backward
+    { 
+        OC1RS = (-a * (PR2 + 1)) / 100;
+        LATBbits.LATB14 = 0;
+    }
+    
+    /* Motor 2 */
+    if (b > 0)                                  // Go forward
+    { 
+        OC2RS = (b * (PR2 + 1)) / 100;
+        LATBbits.LATB15 = 1;
+    } 
+    
+    else                                        // Go backward
+    { 
+        OC2RS = (-b * (PR2 + 1)) / 100;
+        LATBbits.LATB15 = 0;
+    } 
 }
 
 
