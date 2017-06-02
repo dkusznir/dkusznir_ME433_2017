@@ -81,7 +81,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         myControl = (SeekBar) findViewById(R.id.seek1);
         threshValue = (TextView) findViewById(R.id.textView01);
         threshValue.setText("Change threshold filter value (default: 50).");
-        tValue = 50;
+        tValue = 20;
 
         setMyControlListener();
 
