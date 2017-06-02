@@ -223,8 +223,6 @@ void APP_Initialize ( void );
  */
 
 void APP_Tasks( void );
-void speed_control(int a, int b);
-void direction_control(int a, int b);
 
 
 #endif /* _APP_H */

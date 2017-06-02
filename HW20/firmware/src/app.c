@@ -69,9 +69,9 @@ int rxPos = 0; // how much data has been stored
 int gotRx = 0; // the flag
 int rxVal = 0; // a place to store the int that was received
 
-// Set default speeds to 0 
-int pwm1 = 50;
-int pwm2 = 50;
+// Set default PWM to 0 
+int pwmL = 0;
+int pwmR = 0;
 
 
 // *****************************************************************************
@@ -343,29 +343,32 @@ void APP_Initialize(void) {
     appData.readBuffer = &readBuffer[0];
     
     /* Set up motor communication and control*/
-    /* OC1 = B15, OC2 = B14; Using timer2, 10kHZ (recommended) */
+    /* OC1 = A0, OC2 = B2; Using Timer 2, 10kHZ (recommended) */
     
-    // put these initializations in APP_Initialize()
+    // Initialize pins - changed to those recommended by Nick
     RPA0Rbits.RPA0R = 0b0101; // A0 is OC1
     TRISAbits.TRISA1 = 0;
     LATAbits.LATA1 = 0; // A1 is the direction pin to go along with OC1
 
-    RPB2Rbits.RPB2R = 0b0101; // B2 is OC4
+    RPB2Rbits.RPB2R = 0b0101; // B2 is OC2
     TRISBbits.TRISB3 = 0;
-    LATBbits.LATB3 = 0; // B3 is the direction pin to go along with OC4
+    LATBbits.LATB3 = 0; // B3 is the direction pin to go along with OC2
     
+    // Set up Timer 2
     T2CONbits.TCKPS = 2; // prescaler N=4 
     PR2 = 1200 - 1; // 10kHz
     TMR2 = 0;
+    
     OC1CONbits.OCM = 0b110; // PWM mode without fault pin; other OC1CON bits are defaults
-    OC4CONbits.OCM = 0b110;
+    OC2CONbits.OCM = 0b110;
     OC1RS = 0; // max allowed value is 1119
     OC1R = 0; // read-only initial value
-    OC4RS = 0; // max allowed value is 1119
-    OC4R = 0; // read-only initial value
+    OC2RS = 0; // max allowed value is 1119
+    OC2R = 0; // read-only initial value
+    
     T2CONbits.ON = 1;
     OC1CONbits.ON = 1;
-    OC4CONbits.ON = 1;
+    OC2CONbits.ON = 1;
 
     
     startTime = _CP0_GET_COUNT();
@@ -431,12 +434,9 @@ void APP_Tasks(void) {
                     if (appData.readBuffer[ii] == '\n' || appData.readBuffer[ii] == '\r') 
                     {
                         rx[rxPos] = 0; // end the array
-                        sscanf(rx, "%d, %d", &pwm1, &pwm2); // get the int out of the array. Later will only be COM value and we adjust PWM based on that.
+                        sscanf(rx, "%d", &rxVal); // get the int out of the array. Later will only be COM value and we adjust PWM based on that.
                         gotRx = 1; // set the flag
-                        
-                        speed_control(pwm1, pwm2);              // Cap speed if necessary
-                        direction_control(pwm1, pwm2);          // Given speed (possibly adjusted/capped), go forward or backward
-                        
+
                         break; // get out of the while loop
                     } 
                     
@@ -499,7 +499,7 @@ void APP_Tasks(void) {
             i++;
             if (gotRx) 
             {
-                len = sprintf(dataOut, "got: %d, %d\r\n", pwm1, pwm2);     // Print out PWM/OC values
+                len = sprintf(dataOut, "got: %d, %d\r\n", pwmL, pwmR);     // Print out PWM/OC values
                 USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
                         &appData.writeTransferHandle,
                         dataOut, len,
@@ -545,70 +545,6 @@ void APP_Tasks(void) {
             break;
     }
 }
-
-void speed_control(int a, int b)
-{
-    // Cap magnitude at +/- 100% for both motors
-    
-    /* Motor 1 */
-    if (a > 100) 
-    { 
-        a = 100; 
-    } 
-    
-    if (a < -100) 
-    { 
-        a = -100; 
-    }
-    
-    /* Motor 2 */
-    if (a > 100) 
-    { 
-        a = 100; 
-    }
-    
-    if (a < -100) 
-    { 
-        a = -100; 
-    }
-}
-
-void direction_control(int a, int b)
-{
-    /* Motor 1 */
-    if ((a > 0) && (b > 0))                                 // Go forward
-    { 
-        OC1RS = (a * (PR2 + 1)) / 100;
-        LATBbits.LATB14 = 1; 
-        
-        OC2RS = (a * (PR2 + 1)) / 100;
-        LATBbits.LATB15 = 1;
-    } 
-    
-    else if ((a < 0) && (b < 0))                                       // Go backward
-    { 
-        OC1RS = (-a * (PR2 + 1)) / 100;
-        LATBbits.LATB14 = 0;
-        
-        OC2RS = (-a * (PR2 + 1)) / 100;
-        LATBbits.LATB15 = 0;
-    }
-/*    
-    // Motor 2 
-    if (b > 0)                                  // Go forward
-    { 
-
-    } 
-    
-    if (b < 0)                                        // Go backward
-    { 
-        OC2RS = (-b * (PR2 + 1)) / 100;
-        LATBbits.LATB15 = 0;
-    } 
-*/
-}
-
-
 
 /*******************************************************************************
  End of File
