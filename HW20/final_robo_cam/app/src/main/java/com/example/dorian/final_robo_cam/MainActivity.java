@@ -179,11 +179,12 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
                     canvas.drawCircle(com, j, 10, paint1);
                     Log.i("Count", String.valueOf(com));
-
+/*
                     String sendString = String.valueOf(com + '\n');
                     try {
                         sPort.write(sendString.getBytes(), 10); // 10 is the timeout
                     } catch (IOException e) { }
+                    */
 /*
                     if (count > 0)
                     {

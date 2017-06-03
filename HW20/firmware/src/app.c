@@ -61,7 +61,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 
 uint8_t APP_MAKE_BUFFER_DMA_READY dataOut[APP_READ_BUFFER_SIZE];
 uint8_t APP_MAKE_BUFFER_DMA_READY readBuffer[APP_READ_BUFFER_SIZE];
-int len, i = 0;
+int len, i, j, move = 0;
 int startTime = 0;
 
 char rx[64]; // the raw data
@@ -343,16 +343,16 @@ void APP_Initialize(void) {
     appData.readBuffer = &readBuffer[0];
     
     /* Set up motor communication and control*/
-    /* OC1 = A0, OC2 = B2; Using Timer 2, 10kHZ (recommended) */
+    /* OC1 = A0, OC4 = B2; Using Timer 2, 10kHZ (recommended) */
     
     // Initialize pins - changed to those recommended by Nick
     RPA0Rbits.RPA0R = 0b0101; // A0 is OC1
     TRISAbits.TRISA1 = 0;
     LATAbits.LATA1 = 0; // A1 is the direction pin to go along with OC1
 
-    RPB2Rbits.RPB2R = 0b0101; // B2 is OC2
+    RPB2Rbits.RPB2R = 0b0101; // B2 is OC4
     TRISBbits.TRISB3 = 0;
-    LATBbits.LATB3 = 0; // B3 is the direction pin to go along with OC2
+    LATBbits.LATB3 = 0; // B3 is the direction pin to go along with OC4
     
     // Set up Timer 2
     T2CONbits.TCKPS = 2; // prescaler N=4 
@@ -360,15 +360,15 @@ void APP_Initialize(void) {
     TMR2 = 0;
     
     OC1CONbits.OCM = 0b110; // PWM mode without fault pin; other OC1CON bits are defaults
-    OC2CONbits.OCM = 0b110;
+    OC4CONbits.OCM = 0b110;
     OC1RS = 0; // max allowed value is 1119
     OC1R = 0; // read-only initial value
-    OC2RS = 0; // max allowed value is 1119
-    OC2R = 0; // read-only initial value
+    OC4RS = 0; // max allowed value is 1119
+    OC4R = 0; // read-only initial value
     
     T2CONbits.ON = 1;
     OC1CONbits.ON = 1;
-    OC2CONbits.ON = 1;
+    OC4CONbits.ON = 1;
 
     
     startTime = _CP0_GET_COUNT();
@@ -499,13 +499,69 @@ void APP_Tasks(void) {
             i++;
             if (gotRx) 
             {
-                len = sprintf(dataOut, "got: %d, %d\r\n", pwmL, pwmR);     // Print out PWM/OC values
-                USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
+                if (rxVal <= 0 || rxVal > 640)                              // Make sure Values aren't less than 0 or great than max (640)
+                {
+                    pwmL = 0;
+                    pwmR = 0;
+                    move = 0;
+                    
+                }
+                
+                else if (rxVal >= 320)                                      // Decrease PWM in right motor/wheel, left steady
+                {
+                    pwmL = 100;
+                    pwmR = 180 - (rxVal / 8);
+                    move = 1;
+                    
+                   
+                     /* USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
                         &appData.writeTransferHandle,
                         dataOut, len,
                         USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
-                rxPos = 0;
-                gotRx = 0;
+                    rxPos = 0;
+                    gotRx = 0;
+                    rxVal = 0;
+                     */
+                }
+                
+                else                                                        // Decrease PWM in left motor/wheel, right steady
+                {
+                    pwmL = 20 + (rxVal / 8);
+                    pwmR = 100;
+                    move = 1;
+                                        /*
+                    /* USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
+                        &appData.writeTransferHandle,
+                        dataOut, len,
+                        USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
+                    rxPos = 0;
+                    gotRx = 0;
+                    rxVal = 0;
+                     */
+                }
+                
+                OC1RS = pwmL * 20;                                          // Update left duty 
+                OC4RS = pwmR * 20;                                          // Update right duty
+                
+                len = 1;
+                dataOut[0] = 0;
+                
+                if (move == 1)
+                {
+                    USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
+                        &appData.writeTransferHandle,
+                        dataOut, len,
+                        USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
+                    rxPos = 0;
+                    gotRx = 0;
+                    rxVal = 0;
+                }
+                
+                // Clear rx array
+                for (j = 0; j < 64; j++)
+                {
+                    rx[j] = 0;
+                }
             }
             
             else
