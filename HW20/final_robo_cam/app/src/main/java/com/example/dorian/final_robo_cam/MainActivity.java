@@ -22,7 +22,9 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.TextureView;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.SeekBar;
@@ -58,10 +60,16 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     private Paint paint1 = new Paint();
     private TextView mTextView;
 
-    SeekBar myControl;
+    //SeekBar myControl;
     TextView threshValue;
 
     int tValue;
+    int moving = 0;
+    int test = 200;
+    int com = 640;                                          // Max: 640
+
+
+    Button button;
 
     private UsbManager manager;
     private UsbSerialPort sPort;
@@ -78,15 +86,15 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         mTextView = (TextView) findViewById(R.id.cameraStatus);
 
         // Instantiate SeekBar and TextView to display SeekBar value (threshold value)
-        myControl = (SeekBar) findViewById(R.id.seek1);
+        //myControl = (SeekBar) findViewById(R.id.seek1);
         threshValue = (TextView) findViewById(R.id.textView01);
-        threshValue.setText("Change threshold filter value (default: 50).");
+        threshValue.setText("Change threshold filter value (default: 20).");
         tValue = 20;
 
-        setMyControlListener();
+        //setMyControlListener();
 
         // see if the app has permission to use the camera
-        ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, 1);
+        //ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, 1);
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             mSurfaceView = (SurfaceView) findViewById(R.id.surfaceview);
             mSurfaceHolder = mSurfaceView.getHolder();
@@ -102,6 +110,31 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         } else {
             mTextView.setText("no camera permissions");
         }
+
+        button = (Button) findViewById(R.id.button1);                   // Instantiate Button
+
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (moving == 0) {
+                    moving = 1;
+                    button.setText("STOP!");
+/*
+                    String sendString = String.valueOf(test + '\n');
+                    try {
+                        sPort.write(sendString.getBytes(), 10); // 10 is the timeout
+                    } catch (IOException e) {
+                    }*/
+
+                } else {
+                    moving = 0;
+                    button.setText("LET'S GO!");
+                    com = 0;
+                    mTextView.setText("COM " + com);
+
+                }
+            }
+        });
 
         manager = (UsbManager) getSystemService(Context.USB_SERVICE);
 
@@ -141,13 +174,11 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         final Canvas c = mSurfaceHolder.lockCanvas();
 
-        int com = 640;                                          // Max: 640
-
-        if (c != null) {
+        if (c != null && moving == 1) {
 
             for (int j = 0; j < bmp.getHeight(); j++)           // Loop through each row
             {
-                if (j % 16 == 0)                                 // Only look at every 16th row (better performance and ability to see green lines drawn over green objects)
+                if (j % 32 == 0)                                 // Only look at every 16th row (better performance and ability to see green lines drawn over green objects)
                 {
                     int thresh = tValue; // comparison value. changed this to be higher for better performance
                     int[] pixels = new int[bmp.getWidth()]; // pixels[] is the RGBA data
@@ -183,8 +214,9 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                     String sendString = String.valueOf(com + '\n');
                     try {
                         sPort.write(sendString.getBytes(), 10); // 10 is the timeout
-                    } catch (IOException e) { }
-                    */
+                    } catch (IOException e) {
+                    }*/
+
 /*
                     if (count > 0)
                     {
@@ -219,32 +251,33 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         */
     }
 
-    private void setMyControlListener() {
-        myControl.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+    /*
+        private void setMyControlListener() {
+            myControl.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 
-            int progressChanged = 0;
+                int progressChanged = 0;
 
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                progressChanged = progress;
-                tValue = progress;
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    progressChanged = progress;
+                    tValue = progress;
 
-                threshValue.setText("Threshold (Green Filter) Value: " + progress);
+                    threshValue.setText("Threshold (Green Filter) Value: " + progress);
 
-            }
+                }
 
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {
 
-            }
+                }
 
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {
 
-            }
-        });
-    }
-
+                }
+            });
+        }
+    */
     private final SerialInputOutputManager.Listener mListener =
             new SerialInputOutputManager.Listener() {
                 @Override
@@ -264,13 +297,14 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             };
 
     @Override
-    protected void onPause(){
+    protected void onPause() {
         super.onPause();
         stopIoManager();
-        if(sPort != null){
-            try{
+        if (sPort != null) {
+            try {
                 sPort.close();
-            } catch (IOException e){ }
+            } catch (IOException e) {
+            }
             sPort = null;
         }
         finish();
@@ -281,12 +315,12 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         super.onResume();
 
         ProbeTable customTable = new ProbeTable();
-        customTable.addProduct(0x04D8,0x000A, CdcAcmSerialDriver.class);
+        customTable.addProduct(0x04D8, 0x000A, CdcAcmSerialDriver.class);
         UsbSerialProber prober = new UsbSerialProber(customTable);
 
         final List<UsbSerialDriver> availableDrivers = prober.findAllDrivers(manager);
 
-        if(availableDrivers.isEmpty()) {
+        if (availableDrivers.isEmpty()) {
             //check
             return;
         }
@@ -294,12 +328,12 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         UsbSerialDriver driver = availableDrivers.get(0);
         sPort = driver.getPorts().get(0);
 
-        if (sPort == null){
+        if (sPort == null) {
             //check
-        }else{
+        } else {
             final UsbManager usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
             UsbDeviceConnection connection = usbManager.openDevice(driver.getDevice());
-            if (connection == null){
+            if (connection == null) {
                 //check
                 PendingIntent pi = PendingIntent.getBroadcast(this, 0, new Intent("com.android.example.USB_PERMISSION"), 0);
                 usbManager.requestPermission(driver.getDevice(), pi);
@@ -310,11 +344,12 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 sPort.open(connection);
                 sPort.setParameters(9600, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
 
-            }catch (IOException e) {
+            } catch (IOException e) {
                 //check
-                try{
+                try {
                     sPort.close();
-                } catch (IOException e1) { }
+                } catch (IOException e1) {
+                }
                 sPort = null;
                 return;
             }
@@ -322,21 +357,21 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         onDeviceStateChange();
     }
 
-    private void stopIoManager(){
-        if(mSerialIoManager != null) {
+    private void stopIoManager() {
+        if (mSerialIoManager != null) {
             mSerialIoManager.stop();
             mSerialIoManager = null;
         }
     }
 
     private void startIoManager() {
-        if(sPort != null){
+        if (sPort != null) {
             mSerialIoManager = new SerialInputOutputManager(sPort, mListener);
             mExecutor.submit(mSerialIoManager);
         }
     }
 
-    private void onDeviceStateChange(){
+    private void onDeviceStateChange() {
         stopIoManager();
         startIoManager();
     }
@@ -348,7 +383,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         String rxString = null;
         try {
             rxString = new String(data, "UTF-8"); // put the data you got into a string
-
+            //myTextView3.append(rxString);
+            //myScrollView.fullScroll(View.FOCUS_DOWN);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
