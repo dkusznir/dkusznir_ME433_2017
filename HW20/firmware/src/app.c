@@ -510,7 +510,7 @@ void APP_Tasks(void) {
                 else if (rxVal >= 320)                                      // Decrease PWM in right motor/wheel, left steady
                 {
                     pwmL = 100;
-                    pwmR = 180 - (rxVal / 8);
+                    pwmR = 180 - (rxVal / 4);
                     move = 1;
                     
                    
@@ -526,7 +526,7 @@ void APP_Tasks(void) {
                 
                 else                                                        // Decrease PWM in left motor/wheel, right steady
                 {
-                    pwmL = 20 + (rxVal / 8);
+                    pwmL = 20 + (rxVal / 4);
                     pwmR = 100;
                     move = 1;
                                         /*

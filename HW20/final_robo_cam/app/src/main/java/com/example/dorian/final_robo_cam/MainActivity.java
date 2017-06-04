@@ -18,6 +18,7 @@ import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -50,7 +51,7 @@ import static android.graphics.Color.green;
 import static android.graphics.Color.red;
 import static android.graphics.Color.rgb;
 
-public class MainActivity extends Activity implements TextureView.SurfaceTextureListener {
+public class MainActivity extends AppCompatActivity implements TextureView.SurfaceTextureListener {
     private Camera mCamera;
     private TextureView mTextureView;
     private SurfaceView mSurfaceView;
@@ -71,6 +72,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
     Button button;
 
+    // USB global variables
     private UsbManager manager;
     private UsbSerialPort sPort;
     private final ExecutorService mExecutor = Executors.newSingleThreadExecutor();
@@ -119,12 +121,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 if (moving == 0) {
                     moving = 1;
                     button.setText("STOP!");
-/*
-                    String sendString = String.valueOf(test + '\n');
-                    try {
-                        sPort.write(sendString.getBytes(), 10); // 10 is the timeout
-                    } catch (IOException e) {
-                    }*/
+
 
                 } else {
                     moving = 0;
@@ -138,117 +135,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         manager = (UsbManager) getSystemService(Context.USB_SERVICE);
 
-    }
-
-    public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-        mCamera = Camera.open();
-        Camera.Parameters parameters = mCamera.getParameters();
-        parameters.setPreviewSize(640, 480);
-        parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_INFINITY); // no autofocusing
-        parameters.setAutoExposureLock(true); // keep the white balance constant
-        mCamera.setParameters(parameters);
-        mCamera.setDisplayOrientation(90); // rotate to portrait mode
-
-        try {
-            mCamera.setPreviewTexture(surface);
-            mCamera.startPreview();
-        } catch (IOException ioe) {
-            // Something bad happened
-        }
-    }
-
-    public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-        // Ignored, Camera does all the work for us
-    }
-
-    public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-        mCamera.stopPreview();
-        mCamera.release();
-        return true;
-    }
-
-    // the important function
-    public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-        // every time there is a new Camera preview frame
-        mTextureView.getBitmap(bmp);
-
-        final Canvas c = mSurfaceHolder.lockCanvas();
-
-        if (c != null && moving == 1) {
-
-            for (int j = 0; j < bmp.getHeight(); j++)           // Loop through each row
-            {
-                if (j % 32 == 0)                                 // Only look at every 16th row (better performance and ability to see green lines drawn over green objects)
-                {
-                    int thresh = tValue; // comparison value. changed this to be higher for better performance
-                    int[] pixels = new int[bmp.getWidth()]; // pixels[] is the RGBA data
-                    int startY = j; // which row in the bitmap to analyze to read
-                    bmp.getPixels(pixels, 0, bmp.getWidth(), 0, startY, bmp.getWidth(), 1);
-
-                    int pix_total = 0;
-                    int count = 0;
-
-                    // in the row, see if there is more green than red
-                    for (int i = 0; i < bmp.getWidth(); i++) {
-                        int rg = Math.abs(red(pixels[i]) - green(pixels[i]));
-                        int rb = Math.abs(red(pixels[i]) - blue(pixels[i]));
-                        int gb = Math.abs(green(pixels[i]) - blue(pixels[i]));
-
-                        if (rg < thresh && rb < thresh && gb < thresh) {
-                            pixels[i] = rgb(0, 255, 0); // over write the pixel with pure green
-                            pix_total += i;
-                            count++;
-
-                        }
-                    }
-
-                    if (count > 0) {
-                        com = pix_total / count;
-                    }
-
-                    mTextView.setText("COM " + com);
-
-                    canvas.drawCircle(com, j, 10, paint1);
-                    Log.i("Count", String.valueOf(com));
-/*
-                    String sendString = String.valueOf(com + '\n');
-                    try {
-                        sPort.write(sendString.getBytes(), 10); // 10 is the timeout
-                    } catch (IOException e) {
-                    }*/
-
-/*
-                    if (count > 0)
-                    {
-                        int mid = count / 2;
-                        canvas.drawCircle(mid, j, 10, paint1);
-                    }
-*/
-                    // update row
-                    bmp.setPixels(pixels, 0, bmp.getWidth(), 0, startY, bmp.getWidth(), 1);
-                }
-
-            }
-
-
-        }
-
-        // draw a circle at some position
-        int pos = 50;
-        canvas.drawCircle(pos, 240, 5, paint1); // x position, y position, diameter, color
-
-        // write the pos as text
-        canvas.drawText("pos = " + pos, 10, 200, paint1);
-        c.drawBitmap(bmp, 0, 0, null);
-        mSurfaceHolder.unlockCanvasAndPost(c);
-
-        /*
-        // calculate the FPS to see how fast the code is running
-        long nowtime = System.currentTimeMillis();
-        long diff = nowtime - prevtime;
-        mTextView.setText("COM " + com);
-        prevtime = nowtime;
-        */
     }
 
     /*
@@ -383,10 +269,126 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         String rxString = null;
         try {
             rxString = new String(data, "UTF-8"); // put the data you got into a string
-            //myTextView3.append(rxString);
-            //myScrollView.fullScroll(View.FOCUS_DOWN);
+            mTextView.setText("Got:  " + rxString);
+
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
     }
+
+    public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+        mCamera = Camera.open();
+        Camera.Parameters parameters = mCamera.getParameters();
+        parameters.setPreviewSize(640, 480);
+        parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_INFINITY); // no autofocusing
+        parameters.setAutoExposureLock(true); // keep the white balance constant
+        mCamera.setParameters(parameters);
+        mCamera.setDisplayOrientation(90); // rotate to portrait mode
+
+        try {
+            mCamera.setPreviewTexture(surface);
+            mCamera.startPreview();
+        } catch (IOException ioe) {
+            // Something bad happened
+        }
+    }
+
+    public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+        // Ignored, Camera does all the work for us
+    }
+
+    public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+        mCamera.stopPreview();
+        mCamera.release();
+        return true;
+    }
+
+    // the important function
+    public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+        // every time there is a new Camera preview frame
+        mTextureView.getBitmap(bmp);
+
+        final Canvas c = mSurfaceHolder.lockCanvas();
+
+        int oldCom = 0;
+
+        if (c != null && moving == 1) {
+
+            for (int j = 0; j < bmp.getHeight(); j++)           // Loop through each row
+            {
+                if (j % 32 == 0)                                 // Only look at every 16th row (better performance and ability to see green lines drawn over green objects)
+                {
+                    int thresh = tValue; // comparison value. changed this to be higher for better performance
+                    int[] pixels = new int[bmp.getWidth()]; // pixels[] is the RGBA data
+                    int startY = j; // which row in the bitmap to analyze to read
+                    bmp.getPixels(pixels, 0, bmp.getWidth(), 0, startY, bmp.getWidth(), 1);
+
+                    int pix_total = 0;
+                    int count = 0;
+
+                    // in the row, see if there is more green than red
+                    for (int i = 0; i < bmp.getWidth(); i++) {
+                        int rg = Math.abs(red(pixels[i]) - green(pixels[i]));
+                        int rb = Math.abs(red(pixels[i]) - blue(pixels[i]));
+                        int gb = Math.abs(green(pixels[i]) - blue(pixels[i]));
+
+                        if (rg < thresh && rb < thresh && gb < thresh) {
+                            pixels[i] = rgb(0, 255, 0); // over write the pixel with pure green
+                            pix_total += i;
+                            count++;
+
+                        }
+                    }
+
+                    if (count > 0) {
+                        com = pix_total / count;
+                    }
+
+
+                    String sendString = String.valueOf(com + '\n');
+                    try {
+                        sPort.write(sendString.getBytes(), 10); // 10 is the timeout
+                    } catch (IOException e) {
+                    }
+
+                    mTextView.setText("COM " + com);
+
+                    canvas.drawCircle(com, j, 10, paint1);
+                    Log.i("Count", String.valueOf(com));
+
+
+/*
+                    if (count > 0)
+                    {
+                        int mid = count / 2;
+                        canvas.drawCircle(mid, j, 10, paint1);
+                    }
+*/
+                    // update row
+                    bmp.setPixels(pixels, 0, bmp.getWidth(), 0, startY, bmp.getWidth(), 1);
+                }
+
+            }
+
+
+        }
+
+        // draw a circle at some position
+        int pos = 50;
+        canvas.drawCircle(pos, 240, 5, paint1); // x position, y position, diameter, color
+
+        // write the pos as text
+        canvas.drawText("pos = " + pos, 10, 200, paint1);
+        c.drawBitmap(bmp, 0, 0, null);
+        mSurfaceHolder.unlockCanvasAndPost(c);
+
+        /*
+        // calculate the FPS to see how fast the code is running
+        long nowtime = System.currentTimeMillis();
+        long diff = nowtime - prevtime;
+        mTextView.setText("COM " + com);
+        prevtime = nowtime;
+        */
+    }
+
 }

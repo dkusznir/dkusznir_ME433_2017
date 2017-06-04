@@ -46,7 +46,6 @@
             android:layout_height="480px" />
 
 
-
     </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>

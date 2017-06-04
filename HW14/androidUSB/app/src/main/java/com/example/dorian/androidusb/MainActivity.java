@@ -71,12 +71,25 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View v)
             {
-                myTextView2.setText("Value on click is " + myControl.getProgress() * 3);
+/*                myTextView2.setText("Value on click is " + myControl.getProgress());
 
-                String sendString = String.valueOf(myControl.getProgress() * 3) + '\n';
+                String sendString = String.valueOf(myControl.getProgress()) + '\n';
                 try {
                     sPort.write(sendString.getBytes(), 10); // 10 is the timeout
-                } catch (IOException e) { }
+                } catch (IOException e) { }*/
+
+                for (int i = 320; i < 640; i += 20)
+                {
+                    String sendString = String.valueOf(i) + '\n';
+                    try {
+                        sPort.write(sendString.getBytes(), 10); // 10 is the timeout
+                    } catch (IOException e) { }
+
+                    for (int j = 0; j < 1000000000; j++)
+                    {
+
+                    }
+                }
             }
         });
 
