@@ -509,8 +509,8 @@ void APP_Tasks(void) {
                 
                 else if (rxVal >= 320)                                      // Decrease PWM in right motor/wheel, left steady
                 {
-                    pwmL = 100;
-                    pwmR = 180 - (rxVal / 4);
+                    pwmL = 2000;
+                    pwmR = (180 - (rxVal / 4)) * 20;
                     move = 1;
                     
                    
@@ -526,8 +526,8 @@ void APP_Tasks(void) {
                 
                 else                                                        // Decrease PWM in left motor/wheel, right steady
                 {
-                    pwmL = 20 + (rxVal / 4);
-                    pwmR = 100;
+                    pwmL = (20 + (rxVal / 4))* 20;
+                    pwmR = 2000;
                     move = 1;
                                         /*
                     /* USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
@@ -540,8 +540,8 @@ void APP_Tasks(void) {
                      */
                 }
                 
-                OC1RS = pwmL * 20;                                          // Update left duty 
-                OC4RS = pwmR * 20;                                          // Update right duty
+                OC1RS = pwmL;                                               // Update left duty 
+                OC4RS = pwmR;                                               // Update right duty
                 
                 len = 1;
                 dataOut[0] = 0;
