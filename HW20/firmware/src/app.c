@@ -546,22 +546,16 @@ void APP_Tasks(void) {
                 len = 1;
                 dataOut[0] = 0;
                 
-                if (move == 1)
-                {
-                    USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
-                        &appData.writeTransferHandle,
-                        dataOut, len,
-                        USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
-                    rxPos = 0;
-                    gotRx = 0;
-                    rxVal = 0;
-                }
+
+                USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
+                    &appData.writeTransferHandle,
+                    dataOut, len,
+                    USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
+                rxPos = 0;
+                gotRx = 0;
+                rxVal = 0;
                 
-                // Clear rx array
-                for (j = 0; j < 64; j++)
-                {
-                    rx[j] = 0;
-                }
+                
             }
             
             else
