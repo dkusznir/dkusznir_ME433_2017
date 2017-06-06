@@ -434,7 +434,7 @@ void APP_Tasks(void) {
                     if (appData.readBuffer[ii] == '\n' || appData.readBuffer[ii] == '\r') 
                     {
                         rx[rxPos] = 0; // end the array
-                        sscanf(rx, "%d", &rxVal); // get the int out of the array. Later will only be COM value and we adjust PWM based on that.
+                        sscanf(rx, "%d %d", &pwmL, &pwmR); // get the int out of the array. Later will only be COM value and we adjust PWM based on that.
                         gotRx = 1; // set the flag
 
                         break; // get out of the while loop
@@ -499,78 +499,30 @@ void APP_Tasks(void) {
             i++;
             if (gotRx) 
             {
-                if (rxVal <= 0 || rxVal > 640)                              // Make sure Values aren't less than 0 or great than max (640)
-                {
-                    pwmL = 0;
-                    pwmR = 0;
-                    move = 0;
-                    
-                }
-                
-                else if (rxVal >= 320)                                      // Decrease PWM in right motor/wheel, left steady
-                {
-                    pwmL = 2000;
-                    pwmR = (180 - (rxVal / 4)) * 20;
-                    move = 1;
-                    
-                   
-                     /* USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
-                        &appData.writeTransferHandle,
-                        dataOut, len,
-                        USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
-                    rxPos = 0;
-                    gotRx = 0;
-                    rxVal = 0;
-                     */
-                }
-                
-                else                                                        // Decrease PWM in left motor/wheel, right steady
-                {
-                    pwmL = (20 + (rxVal / 4))* 20;
-                    pwmR = 2000;
-                    move = 1;
-                                        /*
-                    /* USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
-                        &appData.writeTransferHandle,
-                        dataOut, len,
-                        USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
-                    rxPos = 0;
-                    gotRx = 0;
-                    rxVal = 0;
-                     */
-                }
-                
+                  
                 OC1RS = pwmL;                                               // Update left duty 
                 OC4RS = pwmR;                                               // Update right duty
                 
-                len = 1;
+                len = sprintf(dataOut, "Left PWM: %d | Right PWM: %d\r\n", pwmL, pwmR);
                 dataOut[0] = 0;
-                
-
-                USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
-                    &appData.writeTransferHandle,
-                    dataOut, len,
-                    USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
+               
                 rxPos = 0;
-                gotRx = 0;
-                rxVal = 0;
-                
+                gotRx = 0;                
                 
             }
             
             else
             {
-                //len = sprintf(dataOut, "%d\r\n", i);
-                //i++;
                 len = 1;
                 dataOut[0] = 0;
-                
-                USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
-                    &appData.writeTransferHandle, dataOut, len,
-                        USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
-                
-                startTime = _CP0_GET_COUNT();
             }
+            
+            USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
+                &appData.writeTransferHandle,
+                dataOut, len,
+                USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
+            
+            startTime = _CP0_GET_COUNT();
             
             break;
 

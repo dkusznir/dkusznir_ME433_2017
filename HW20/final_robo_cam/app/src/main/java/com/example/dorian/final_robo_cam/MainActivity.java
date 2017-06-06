@@ -68,6 +68,8 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     int moving = 0;
     int test = 200;
     int com = 640;                                          // Max: 640
+    int pwml = 0;
+    int pwmr = 0;
 
 
     Button button;
@@ -344,19 +346,40 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
                         com = pix_total / count;
                     }
 
-
-                    String sendString = String.valueOf(com + '\n');
-                    try {
-                        sPort.write(sendString.getBytes(), 10); // 10 is the timeout
-                    } catch (IOException e) {
-                    }
-
                     mTextView.setText("COM " + com);
 
                     canvas.drawCircle(com, j, 10, paint1);
                     Log.i("Count", String.valueOf(com));
 
+                    if (com > 0 && com < 641)
+                    {
+                        if (com >= 320)
+                        {
+                            pwml = 2000;
+                            pwmr = (180 - (com / 4) * 20);
+                        }
 
+                        else if (com < 320)
+                        {
+                            pwml = (20 + (com / 4) * 20);
+                            pwmr = 2000;
+                        }
+                    }
+
+                    else
+                    {
+                        pwml = 0;
+                        pwmr = 0;
+                    }
+
+                    if (pwml < 2001 && pwmr < 2001)
+                    {
+                        String sendString = String.valueOf(pwml + ' ' + pwmr + '\n');
+                        try {
+                            sPort.write(sendString.getBytes(), 10); // 10 is the timeout
+                        } catch (IOException e) {
+                        }
+                    }
 /*
                     if (count > 0)
                     {
@@ -372,15 +395,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
 
 
         }
-
-        // draw a circle at some position
-        int pos = 50;
-        canvas.drawCircle(pos, 240, 5, paint1); // x position, y position, diameter, color
-
-        // write the pos as text
-        canvas.drawText("pos = " + pos, 10, 200, paint1);
-        c.drawBitmap(bmp, 0, 0, null);
-        mSurfaceHolder.unlockCanvasAndPost(c);
+        
 
         /*
         // calculate the FPS to see how fast the code is running
