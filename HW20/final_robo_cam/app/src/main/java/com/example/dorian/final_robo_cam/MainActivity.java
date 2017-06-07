@@ -51,7 +51,7 @@ import static android.graphics.Color.green;
 import static android.graphics.Color.red;
 import static android.graphics.Color.rgb;
 
-public class MainActivity extends AppCompatActivity implements TextureView.SurfaceTextureListener {
+public class MainActivity extends Activity implements TextureView.SurfaceTextureListener {
     private Camera mCamera;
     private TextureView mTextureView;
     private SurfaceView mSurfaceView;
@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         //myControl = (SeekBar) findViewById(R.id.seek1);
         threshValue = (TextView) findViewById(R.id.textView01);
         threshValue.setText("Change threshold filter value (default: 20).");
-        tValue = 20;
+        tValue = 15;
 
         //setMyControlListener();
 
@@ -121,6 +121,9 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
             @Override
             public void onClick(View v) {
                 if (moving == 0) {
+
+                    //String sendString = String.valueOf(1000) + ' ' + String.valueOf(1000) + '\n';
+
                     moving = 1;
                     button.setText("STOP!");
 
@@ -130,6 +133,13 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
                     button.setText("LET'S GO!");
                     com = 0;
                     mTextView.setText("COM " + com);
+
+                    String sendString = String.valueOf(0) + ' ' + String.valueOf(0) + '\n';
+                    try {
+
+                        sPort.write(sendString.getBytes(), 10); // 10 is the timeout
+                    } catch (IOException e) {
+                    }
 
                 }
             }
@@ -318,7 +328,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
 
             for (int j = 0; j < bmp.getHeight(); j++)           // Loop through each row
             {
-                if (j % 32 == 0)                                 // Only look at every 16th row (better performance and ability to see green lines drawn over green objects)
+                if (j == 200)                                 // Only look at every 16th row (better performance and ability to see green lines drawn over green objects)
                 {
                     int thresh = tValue; // comparison value. changed this to be higher for better performance
                     int[] pixels = new int[bmp.getWidth()]; // pixels[] is the RGBA data
@@ -329,7 +339,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
                     int count = 0;
 
                     // in the row, see if there is more green than red
-                    for (int i = 0; i < bmp.getWidth(); i++) {
+/*                   for (int i = 0; i < bmp.getWidth(); i++) {
                         int rg = Math.abs(red(pixels[i]) - green(pixels[i]));
                         int rb = Math.abs(red(pixels[i]) - blue(pixels[i]));
                         int gb = Math.abs(green(pixels[i]) - blue(pixels[i]));
@@ -340,7 +350,23 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
                             count++;
 
                         }
+                    }*/
+
+                    // in the row, see if there is more green than red
+
+                    for (int i = 0; i < bmp.getWidth(); i++) {
+                        if ((green(pixels[i]) - red(pixels[i])) > thresh)
+                        {
+                            pixels[i] = rgb(0, 255, 0); // over write the pixel with pure green
+
+                        }
+                        else
+                            {
+                            pix_total += i;
+                            count++;
+                        }
                     }
+
 
                     if (count > 0) {
                         com = pix_total / count;
@@ -353,16 +379,22 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
 
                     if (com > 0 && com < 641)
                     {
-                        if (com >= 320)
+                        if (com > 375)
                         {
-                            pwml = 2000;
-                            pwmr = (180 - (com / 4) * 20);
+                            pwml = 900;
+                            pwmr = 1100 - ((com - 320) * 2);
                         }
 
-                        else if (com < 320)
+                        else if (com < 275)
                         {
-                            pwml = (20 + (com / 4) * 20);
-                            pwmr = 2000;
+                            pwml = 1100 - ((320 - com) * 2);
+                            pwmr = 900;
+                        }
+
+                        else
+                        {
+                            pwml = 900;
+                            pwmr = 900;
                         }
                     }
 
@@ -372,14 +404,14 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
                         pwmr = 0;
                     }
 
-                    if (pwml < 2001 && pwmr < 2001)
-                    {
-                        String sendString = String.valueOf(pwml + ' ' + pwmr + '\n');
-                        try {
-                            sPort.write(sendString.getBytes(), 10); // 10 is the timeout
-                        } catch (IOException e) {
-                        }
+                    String sendString = String.valueOf(pwml) + ' ' + String.valueOf(pwmr) + '\n';
+                    try {
+
+                        sPort.write(sendString.getBytes(), 10); // 10 is the timeout
+                    } catch (IOException e) {
                     }
+
+
 /*
                     if (count > 0)
                     {
@@ -388,14 +420,17 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
                     }
 */
                     // update row
+
+
                     bmp.setPixels(pixels, 0, bmp.getWidth(), 0, startY, bmp.getWidth(), 1);
                 }
+
 
             }
 
 
         }
-        
+
 
         /*
         // calculate the FPS to see how fast the code is running
@@ -404,6 +439,15 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         mTextView.setText("COM " + com);
         prevtime = nowtime;
         */
+
+        // draw a circle at some position
+        int pos = 50;
+        canvas.drawCircle(pos, 240, 5, paint1); // x position, y position, diameter, color
+
+        // write the pos as text
+        canvas.drawText("pos = " + pos, 10, 200, paint1);
+        c.drawBitmap(bmp, 0, 0, null);
+        mSurfaceHolder.unlockCanvasAndPost(c);
     }
 
 }
