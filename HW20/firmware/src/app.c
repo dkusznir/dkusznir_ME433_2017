@@ -52,6 +52,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include "app.h"
 #include <stdio.h>
 #include <xc.h>
+#include <math.h>
 
 // *****************************************************************************
 // *****************************************************************************
@@ -72,6 +73,10 @@ int rxVal = 0; // a place to store the int that was received
 // Set default PWM to 0 
 int pwmL = 0;
 int pwmR = 0;
+
+// Vive position variables
+double xPos;
+double yPos;
 
 
 // *****************************************************************************
@@ -369,6 +374,26 @@ void APP_Initialize(void) {
     T2CONbits.ON = 1;
     OC1CONbits.ON = 1;
     OC4CONbits.ON = 1;
+    
+    // Vive position sensor
+        // initialize the sensor variables
+    V1.prevMic = 0;
+    V1.horzAng = 0;
+    V1.vertAng = 0;
+    V1.useMe = 0;
+    V1.collected = 0;
+
+    TRISBbits.TRISB7 = 1; // connect the TS3633 ENV pin to B7
+    IC4Rbits.IC4R = 0b0100; // B7 is IC4 (input capture 4)
+    IC4CONbits.ICM = 1; // detect rising and falling edges
+    IC4CONbits.ICI = 0; // interrupt on an edge
+    IC4CONbits.ICTMR = 1; // store the value of timer2, but we're actually just using the interrupt and ignoring timer2
+    IC4CONbits.FEDGE = 0; // first event is falling edge, doesn't really matter
+    IC4CONbits.ON = 1;
+    IPC4bits.IC4IP = 5; // step 4: interrupt priority 5
+    IPC4bits.IC4IS = 1; // step 4: interrupt priority 1
+    IFS0bits.IC4IF = 0; // step 5: clear the int flag
+    IEC0bits.IC4IE = 1; // step 6: enable INT0 by setting IEC0<3>
 
     
     startTime = _CP0_GET_COUNT();
@@ -503,7 +528,10 @@ void APP_Tasks(void) {
                 OC1RS = pwmL;                                               // Update left duty 
                 OC4RS = pwmR;                                               // Update right duty
                 
-                len = sprintf(dataOut, "Left PWM: %d | Right PWM: %d\r\n", pwmL, pwmR);
+                xPos = tan((V1.vertAng - 90.0) * DEG_TO_RAD) * LIGHTHOUSEHEIGHT;
+                yPos = tan((V1.horzAng - 90.0) * DEG_TO_RAD) * LIGHTHOUSEHEIGHT;
+                
+                len = sprintf(dataOut, "X Position: %d | Y Position: %d\r\n", xPos, yPos);
                 dataOut[0] = 0;
                
                 rxPos = 0;
